@@ -1,0 +1,12 @@
+# https://circleci.com/docs/2.0/language-elixir/
+version: 2
+jobs:
+  build:
+    docker:
+      - image: leifg/elixir:edge
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run: mix deps.get
+      - run: mix ecto.create
+      - run: mix test
