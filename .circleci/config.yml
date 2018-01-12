@@ -1,0 +1,37 @@
+# https://circleci.com/docs/2.0/language-elixir/
+version: 2
+jobs:
+  test:
+    docker:
+      - image: leifg/elixir:edge
+        environment:
+          MIX_ENV: test
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          command: mix do deps.get, test
+          working_directory: lib/bmf_client
+      - run:
+          command: mix do deps.get, test
+          working_directory: lib/bmf_server
+  build:
+    docker:
+      - image: leifg/elixir:edge
+        environment:
+          MIX_ENV: prod
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          command: mix do deps.get, compile
+          working_directory: lib/bmf_server
+workflows:
+  version: 2
+  test_and_build:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
+
