@@ -28,8 +28,9 @@ defmodule BmfClientWeb do
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/bmf_client_web/templates",
-                        namespace: BmfClientWeb
+      use Phoenix.View,
+        root: "lib/bmf_client_web/templates",
+        namespace: BmfClientWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
