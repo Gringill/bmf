@@ -9,7 +9,7 @@ defmodule BmfClient.Application do
     # Define workers and child supervisors to be supervised
     children = [
       # Start the endpoint when the application starts
-      supervisor(BmfClientWeb.Endpoint, []),
+      supervisor(BmfClientWeb.Endpoint, [])
       # Start your own worker by calling: BmfClient.Worker.start_link(arg1, arg2, arg3)
       # worker(BmfClient.Worker, [arg1, arg2, arg3]),
     ]

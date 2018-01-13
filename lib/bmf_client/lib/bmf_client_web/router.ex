@@ -2,10 +2,10 @@ defmodule BmfClientWeb.Router do
   use BmfClientWeb, :router
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/api", BmfClientWeb do
-    pipe_through :api
+    pipe_through(:api)
   end
 end
