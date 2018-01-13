@@ -1,6 +1,20 @@
 # https://circleci.com/docs/2.0/language-elixir/
 version: 2
 jobs:
+  format:
+    docker:
+      - image: leifg/elixir:edge
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - run:
+          name: Ensure bmf_client is formatted
+          command: mix format --check-formatted --dry-run
+          working_directory: lib/bmf_client
+      - run:
+          name: Ensure bmf_server is formatted
+          command: mix format --check-formatted --dry-run
+          working_directory: lib/bmf_server
   test:
     docker:
       - image: leifg/elixir:edge
@@ -10,9 +24,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Fetch bmf_client dependencies and test
           command: mix do deps.get, test
           working_directory: lib/bmf_client
       - run:
+          name: Fetch bmf_server dependencies and test
           command: mix do deps.get, test
           working_directory: lib/bmf_server
   build:
@@ -24,11 +40,17 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Fetch bmf_client dependencies and compile
+          command: mix do deps.get, compile
+          working_directory: lib/bmf_client
+      - run:
+          name: Fetch bmf_server dependencies and compile
           command: mix do deps.get, compile
           working_directory: lib/bmf_server
 workflows:
   version: 2
-  test_and_build:
+  all:
     jobs:
+      - format
       - test
-      - build:
+      - build
