@@ -3,7 +3,7 @@ version: 2
 jobs:
   format:
     docker:
-      - image: leifg/elixir:edge
+      - image: circleci/elixir:1.5.3
     working_directory: ~/repo
     steps:
       - checkout
@@ -17,7 +17,7 @@ jobs:
           working_directory: lib/bmf_server
   test:
     docker:
-      - image: leifg/elixir:edge
+      - image: circleci/elixir:1.5.3
         environment:
           MIX_ENV: test
     working_directory: ~/repo
@@ -33,20 +33,48 @@ jobs:
           working_directory: lib/bmf_server
   build:
     docker:
-      - image: leifg/elixir:edge
+      - image: circleci/elixir:1.5.3
         environment:
           MIX_ENV: prod
     working_directory: ~/repo
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 17.05.0-ce
       - run:
-          name: Fetch bmf_client dependencies and compile
-          command: mix do deps.get, compile
+          name: Build Docker image
           working_directory: lib/bmf_client
+          command: |
+            TAG=$CIRCLE_BRANCH
+            docker build -t bmf/client:$TAG .
+            mkdir -p /tmp/docker-cache
+            docker save -o /tmp/docker-cache/built-image.tar bmf/client:$TAG
+      - save_cache:
+          key: v1-bmf_client-docker-cache-{{ .BuildNum }}
+          paths:
+            - /tmp/docker-cache
+  deploy:
+    docker:
+      - image: circleci/elixir:1.5.3
+        environment:
+          MIX_ENV: prod
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-bmf_client-docker-cache-{{ .BuildNum }}
+      - setup_remote_docker:
+          version: 17.05.0-ce
       - run:
-          name: Fetch bmf_server dependencies and compile
-          command: mix do deps.get, compile
-          working_directory: lib/bmf_server
+          name: Tag and push Docker image
+          working_directory: lib/bmf_client
+          command: |
+            TAG=$CIRCLE_BRANCH
+            TARGET_IMAGE=$ECR_REPOSITORY:$TAG
+            docker load < /tmp/docker-cache/built-image.tar
+            TARGET_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/bmf/client:TAG
+            docker tag bmf/client:$TAG $TARGET_IMAGE
+            docker push $TARGET_IMAGE
 workflows:
   version: 2
   all:
@@ -54,3 +82,11 @@ workflows:
       - format
       - test
       - build
+      - deploy:
+          requires:
+            - format
+            - test
+            - build
+          filters:
+            branches:
+              only: master

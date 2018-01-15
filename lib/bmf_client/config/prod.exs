@@ -57,3 +57,4 @@ config :logger, level: :info
 # start per endpoint:
 #
 #     config :bmf_client, BmfClientWeb.Endpoint, server: true
+#     atlantis

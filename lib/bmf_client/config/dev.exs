@@ -1,11 +1,5 @@
 use Mix.Config
 
-# For development, we disable any cache and enable
-# debugging and code reloading.
-#
-# The watchers configuration can be used to run external
-# watchers to your application. For example, we use it
-# with brunch.io to recompile .js and .css sources.
 config :bmf_client, BmfClientWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
@@ -35,6 +29,17 @@ config :bmf_client, BmfClientWeb.Endpoint,
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
 # different ports.
+
+# Watch static and templates for browser reloading.
+config :bmf_client, BmfClientWeb.Endpoint,
+  live_reload: [
+    patterns: [
+      ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
+      ~r{priv/gettext/.*(po)$},
+      ~r{lib/bmf_client_web/views/.*(ex)$},
+      ~r{lib/bmf_client_web/templates/.*(eex)$}
+    ]
+  ]
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

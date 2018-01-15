@@ -11,13 +11,15 @@ defmodule BmfClientWeb.Endpoint do
     Plug.Static,
     at: "/",
     from: :bmf_client,
-    gzip: false,
+    gzip: true,
     only: ~w(css fonts images js favicon.ico robots.txt)
   )
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
+    socket("/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket)
+    plug(Phoenix.LiveReloader)
     plug(Phoenix.CodeReloader)
   end
 
