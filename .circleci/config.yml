@@ -3,7 +3,7 @@ version: 2
 jobs:
   format:
     docker:
-      - image: circleci/elixir:1.5.3
+      - image: circleci/elixir:1.6
     working_directory: ~/repo
     steps:
       - checkout
@@ -12,18 +12,19 @@ jobs:
           command: mix format --check-formatted --dry-run
   test:
     docker:
-      - image: circleci/elixir:1.5.3
+      - image: circleci/elixir:1.6
         environment:
           MIX_ENV: test
+      - image: postgres
     working_directory: ~/repo
     steps:
       - checkout
       - run:
           name: Fetch dependencies and test
-          command: mix do deps.get, test
+          command: mix do local.hex --force, local.rebar --force, deps.get, ecto.create, test
   build:
     docker:
-      - image: circleci/elixir:1.5.3
+      - image: circleci/elixir:1.6
         environment:
           MIX_ENV: prod
     working_directory: ~/repo
@@ -44,7 +45,7 @@ jobs:
             - /tmp/docker-cache
   deploy:
     docker:
-      - image: circleci/elixir:1.5.3
+      - image: circleci/elixir:1.6
         environment:
           MIX_ENV: prod
     working_directory: ~/repo
@@ -57,13 +58,11 @@ jobs:
       - run:
           name: Tag and push Docker image
           command: |
-            TAG=$CIRCLE_BUILD_NUM
-            TARGET_IMAGE=$ECR_REPOSITORY:$TAG
             docker load < /tmp/docker-cache/built-image.tar
-            TARGET_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/lightsail:TAG
+            TAG=$CIRCLE_BUILD_NUM
+            TARGET_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/aws_lightsail:TAG
             docker tag elixir-devops/lightsail:$TAG $TARGET_IMAGE
             docker push $TARGET_IMAGE
-            aws ec2 list-clusters
 workflows:
   version: 2
   aws_lightsail:
