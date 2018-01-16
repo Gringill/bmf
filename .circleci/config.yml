@@ -3,54 +3,79 @@ version: 2
 jobs:
   format:
     docker:
-      - image: leifg/elixir:edge
+      - image: circleci/elixir:1.5.3
     working_directory: ~/repo
     steps:
       - checkout
       - run:
-          name: Ensure bmf_client is formatted
+          name: Ensure code is formatted
           command: mix format --check-formatted --dry-run
-          working_directory: lib/bmf_client
-      - run:
-          name: Ensure bmf_server is formatted
-          command: mix format --check-formatted --dry-run
-          working_directory: lib/bmf_server
   test:
     docker:
-      - image: leifg/elixir:edge
+      - image: circleci/elixir:1.5.3
         environment:
           MIX_ENV: test
     working_directory: ~/repo
     steps:
       - checkout
       - run:
-          name: Fetch bmf_client dependencies and test
+          name: Fetch dependencies and test
           command: mix do deps.get, test
-          working_directory: lib/bmf_client
-      - run:
-          name: Fetch bmf_server dependencies and test
-          command: mix do deps.get, test
-          working_directory: lib/bmf_server
   build:
     docker:
-      - image: leifg/elixir:edge
+      - image: circleci/elixir:1.5.3
         environment:
           MIX_ENV: prod
     working_directory: ~/repo
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 17.05.0-ce
       - run:
-          name: Fetch bmf_client dependencies and compile
-          command: mix do deps.get, compile
-          working_directory: lib/bmf_client
+          name: Build Docker image
+          command: |
+            TAG=$CIRCLE_BUILD_NUM
+            docker build -t elixir-devops/lightsail:$TAG .
+            mkdir -p /tmp/docker-cache
+            docker save -o /tmp/docker-cache/built-image.tar elixir-devops/lightsail:$TAG
+      - save_cache:
+          key: v1-elixir_devops_lightsail-docker-cache-{{ .BuildNum }}
+          paths:
+            - /tmp/docker-cache
+  deploy:
+    docker:
+      - image: circleci/elixir:1.5.3
+        environment:
+          MIX_ENV: prod
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-elixir_devops_lightsail-docker-cache-{{ .BuildNum }}
+      - setup_remote_docker:
+          version: 17.05.0-ce
       - run:
-          name: Fetch bmf_server dependencies and compile
-          command: mix do deps.get, compile
-          working_directory: lib/bmf_server
+          name: Tag and push Docker image
+          command: |
+            TAG=$CIRCLE_BUILD_NUM
+            TARGET_IMAGE=$ECR_REPOSITORY:$TAG
+            docker load < /tmp/docker-cache/built-image.tar
+            TARGET_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/lightsail:TAG
+            docker tag elixir-devops/lightsail:$TAG $TARGET_IMAGE
+            docker push $TARGET_IMAGE
+            aws ec2 list-clusters
 workflows:
   version: 2
-  all:
+  aws_lightsail:
     jobs:
       - format
       - test
       - build
+      - deploy:
+          requires:
+            - format
+            - test
+            - build
+          filters:
+            branches:
+              only: master
