@@ -1,2 +1,5 @@
-# bmf
-Demo: Clustered Elixir on AWS with Fargate and CircleCI
+# Elixir Devops
+
+New project ✅
+Going to use elixir ✅
+Where and how should I deploy this 😨
