@@ -8,13 +8,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Ensure bmf_client is formatted
+          name: Ensure code is formatted
           command: mix format --check-formatted --dry-run
-          working_directory: lib/bmf_client
-      - run:
-          name: Ensure bmf_server is formatted
-          command: mix format --check-formatted --dry-run
-          working_directory: lib/bmf_server
   test:
     docker:
       - image: circleci/elixir:1.5.3
@@ -24,13 +19,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Fetch bmf_client dependencies and test
+          name: Fetch dependencies and test
           command: mix do deps.get, test
-          working_directory: lib/bmf_client
-      - run:
-          name: Fetch bmf_server dependencies and test
-          command: mix do deps.get, test
-          working_directory: lib/bmf_server
   build:
     docker:
       - image: circleci/elixir:1.5.3
@@ -43,14 +33,13 @@ jobs:
           version: 17.05.0-ce
       - run:
           name: Build Docker image
-          working_directory: lib/bmf_client
           command: |
-            TAG=$CIRCLE_BRANCH
-            docker build -t bmf/client:$TAG .
+            TAG=$CIRCLE_BUILD_NUM
+            docker build -t elixir-devops/lightsail:$TAG .
             mkdir -p /tmp/docker-cache
-            docker save -o /tmp/docker-cache/built-image.tar bmf/client:$TAG
+            docker save -o /tmp/docker-cache/built-image.tar elixir-devops/lightsail:$TAG
       - save_cache:
-          key: v1-bmf_client-docker-cache-{{ .BuildNum }}
+          key: v1-elixir_devops_lightsail-docker-cache-{{ .BuildNum }}
           paths:
             - /tmp/docker-cache
   deploy:
@@ -62,22 +51,22 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-bmf_client-docker-cache-{{ .BuildNum }}
+          key: v1-elixir_devops_lightsail-docker-cache-{{ .BuildNum }}
       - setup_remote_docker:
           version: 17.05.0-ce
       - run:
           name: Tag and push Docker image
-          working_directory: lib/bmf_client
           command: |
-            TAG=$CIRCLE_BRANCH
+            TAG=$CIRCLE_BUILD_NUM
             TARGET_IMAGE=$ECR_REPOSITORY:$TAG
             docker load < /tmp/docker-cache/built-image.tar
-            TARGET_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/bmf/client:TAG
-            docker tag bmf/client:$TAG $TARGET_IMAGE
+            TARGET_IMAGE=$AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/lightsail:TAG
+            docker tag elixir-devops/lightsail:$TAG $TARGET_IMAGE
             docker push $TARGET_IMAGE
+            aws ec2 list-clusters
 workflows:
   version: 2
-  all:
+  aws_lightsail:
     jobs:
       - format
       - test
