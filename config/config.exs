@@ -6,22 +6,25 @@
 use Mix.Config
 
 # General application configuration
-config :aws_lightsail,
-  ecto_repos: [AwsLightsail.Repo]
+config :aws_lightsail, ecto_repos: [AwsLightsail.Repo]
 
 # Configures the endpoint
 config :aws_lightsail, AwsLightsailWeb.Endpoint,
-  url: [host: "localhost"],
-  secret_key_base: "S0jYVgDRX5NCrXux7lH1RKRJGvoPYkRZdZS/eCOrfFJt7sgTKGBJbPS6GiKJZMop",
+  load_from_system_env: true,
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
   render_errors: [view: AwsLightsailWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: AwsLightsail.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: AwsLightsail.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Configure your database
+config :aws_lightsail, AwsLightsail.Repo,
+  load_from_system_env: true,
+  adapter: Ecto.Adapters.Postgres
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

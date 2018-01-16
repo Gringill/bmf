@@ -26,13 +26,13 @@ defmodule AwsLightsailWeb.ConnCase do
     end
   end
 
-
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(AwsLightsail.Repo)
+
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(AwsLightsail.Repo, {:shared, self()})
     end
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
-
 end
