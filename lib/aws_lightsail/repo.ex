@@ -1,11 +1,22 @@
 defmodule AwsLightsail.Repo do
   use Ecto.Repo, otp_app: :aws_lightsail
 
-  @doc """
-  Dynamically loads the repository url from the
-  DATABASE_URL environment variable.
-  """
-  def init(_, opts) do
-    {:ok, Keyword.put(opts, :url, System.get_env("DATABASE_URL"))}
+  def init(_, compiled_config) do
+    config =
+      if compiled_config[:load_from_system_env] do
+        runtime_config = [
+          url: system_get_env("DB_URL"),
+          pool_size: system_get_env("DB_POOL_SIZE")
+        ]
+
+        Keyword.merge(compiled_config, runtime_config)
+      else
+        compiled_config
+      end
+
+    {:ok, config}
   end
+
+  defp system_get_env(var),
+    do: System.get_env(var) || raise("expected the #{var} environment variable to be set")
 end
