@@ -61,6 +61,7 @@ jobs:
             docker load < /tmp/docker-cache/built-image.tar
             TAG=latest
             TARGET_IMAGE=049988697321.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/aws_lightsail:TAG
+            aws ecr get-login
             docker tag elixir-devops/lightsail:$TAG $TARGET_IMAGE
             docker push $TARGET_IMAGE
 workflows:
