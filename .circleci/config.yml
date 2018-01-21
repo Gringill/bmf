@@ -35,7 +35,7 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            TAG=$CIRCLE_BUILD_NUM
+            TAG=latest
             docker build -t elixir-devops/lightsail:$TAG .
             mkdir -p /tmp/docker-cache
             docker save -o /tmp/docker-cache/built-image.tar elixir-devops/lightsail:$TAG
@@ -59,7 +59,7 @@ jobs:
           name: Tag and push Docker image
           command: |
             docker load < /tmp/docker-cache/built-image.tar
-            TAG=$CIRCLE_BUILD_NUM
+            TAG=latest
             TARGET_IMAGE=049988697321.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/aws_lightsail:TAG
             docker tag elixir-devops/lightsail:$TAG $TARGET_IMAGE
             docker push $TARGET_IMAGE
