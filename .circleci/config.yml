@@ -40,7 +40,7 @@ jobs:
             mkdir -p /tmp/docker-cache
             docker save -o /tmp/docker-cache/built-image.tar elixir-devops/lightsail:$TAG
       - save_cache:
-          key: v1-elixir_devops_lightsail-docker-cache-{{ .BuildNum }}
+          key: v1-elixir_devops_lightsail-docker-cache-{{ .Revision }}
           paths:
             - /tmp/docker-cache
   deploy:
@@ -52,7 +52,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-elixir_devops_lightsail-docker-cache-{{ .BuildNum }}
+          key: v1-elixir_devops_lightsail-docker-cache-{{ .Revision }}
       - setup_remote_docker:
           version: 17.05.0-ce
       - run:
