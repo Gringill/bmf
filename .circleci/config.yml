@@ -55,13 +55,17 @@ jobs:
           key: v1-elixir_devops_lightsail-docker-cache-{{ .Revision }}
       - setup_remote_docker:
           version: 17.05.0-ce
+      - run: sudo apt-get update && sudo apt-get install -qq -y python-pip libpython-dev
+      - run: curl -O https://bootstrap.pypa.io/get-pip.py && sudo python get-pip.py
+      - run: sudo pip install -q awscli --upgrade
       - run:
           name: Tag and push Docker image
           command: |
             docker load < /tmp/docker-cache/built-image.tar
             TAG=latest
-            TARGET_IMAGE=049988697321.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/aws_lightsail:TAG
-            aws ecr get-login
+            TARGET_IMAGE=049988697321.dkr.ecr.us-east-1.amazonaws.com/elixir-devops/aws_lightsail:$TAG
+            login="$(aws ecr get-login --region us-east-1 --no-include-email)"
+            ${login}
             docker tag elixir-devops/lightsail:$TAG $TARGET_IMAGE
             docker push $TARGET_IMAGE
 workflows:
